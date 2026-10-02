@@ -3,6 +3,8 @@
 A vibe-coded BepInEx IL2CPP plugin that adds an **Armour material** dropdown to Sprocket's plate structure editor. Pick custom armour materials for your hull, turret, or other plate structures.
 
 **Built with AI assistance.** Mass updates and vehicle saving/loading have been tested and work.
+<img width="666" height="447" alt="{1C800944-F5EE-4A59-884C-092D6C36405C}" src="https://github.com/user-attachments/assets/28fd5705-8f84-4877-b51a-c8dbd489e943" />
+
 
 ## Requirements
 
