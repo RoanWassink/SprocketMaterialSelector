@@ -1,0 +1,12 @@
+{
+  "v": "0.0",
+  "id": "",
+  "type": "advancedArmourSteel",
+  "date": "1970.01.01",
+  "properties": {
+    "rhaFactor": 1.18,
+    "costMultiplier": 4.0,
+    "spallFactor": 0.00045,
+    "density": 7850
+  }
+}

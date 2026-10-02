@@ -1,0 +1,12 @@
+{
+  "v": "0.0",
+  "id": "",
+  "type": "ceramicArray",
+  "date": "1965.01.01",
+  "properties": {
+    "rhaFactor": 0.82,
+    "costMultiplier": 6.5,
+    "spallFactor": 0.0015,
+    "density": 3600
+  }
+}

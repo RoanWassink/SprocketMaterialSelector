@@ -1,0 +1,12 @@
+{
+  "v": "0.0",
+  "id": "",
+  "type": "titaniumArmour",
+  "date": "1965.01.01",
+  "properties": {
+    "rhaFactor": 0.72,
+    "costMultiplier": 6.0,
+    "spallFactor": 0.0005,
+    "density": 4430
+  }
+}

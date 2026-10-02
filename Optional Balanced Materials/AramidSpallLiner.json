@@ -1,0 +1,12 @@
+{
+  "v": "0.0",
+  "id": "",
+  "type": "aramidSpallLiner",
+  "date": "1970.01.01",
+  "properties": {
+    "rhaFactor": 0.04,
+    "costMultiplier": 3.0,
+    "spallFactor": 0.0,
+    "density": 1440
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "v": "0.0",
+  "id": "",
+  "type": "castArmour",
+  "date": "1935.01.01",
+  "properties": {
+    "rhaFactor": 0.95,
+    "costMultiplier": 1.7,
+    "spallFactor": 0.00065,
+    "density": 7850
+  }
+}

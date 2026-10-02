@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="SprocketMod.props" />
+  <PropertyGroup>
+    <AssemblyName>SprocketMaterialSelector</AssemblyName>
+    <RootNamespace>SprocketMaterialSelector</RootNamespace>
+    <PlatformTarget>x64</PlatformTarget>
+  </PropertyGroup>
+</Project>

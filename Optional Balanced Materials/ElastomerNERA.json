@@ -1,0 +1,12 @@
+{
+  "v": "0.0",
+  "id": "",
+  "type": "elastomerNERA",
+  "date": "1965.01.01",
+  "properties": {
+    "rhaFactor": 0.07,
+    "costMultiplier": 1.8,
+    "spallFactor": 0.0,
+    "density": 1200
+  }
+}
