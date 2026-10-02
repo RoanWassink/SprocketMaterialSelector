@@ -4,8 +4,8 @@
   "type": "aluminiumArmour",
   "date": "1955.01.01",
   "properties": {
-    "rhaFactor": 0.38,
-    "costMultiplier": 2.4,
+    "rhaFactor": 0.42,
+    "costMultiplier": 6,
     "spallFactor": 0.0008,
     "density": 2700
   }

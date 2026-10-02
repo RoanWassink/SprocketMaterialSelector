@@ -1,13 +1,16 @@
-# v0.3.1 — Sprocket Material Selector
+# v0.4.0 — Runtime cost balancing and expanded materials pack
 
-Adds an armour material dropdown to the plate structure editor, using custom armour technology JSON files from `Sprocket_Data\StreamingAssets\Technology`.
+- Automatic minimum material price based on protection per millimetre and per kilogram, relative to vanilla RHA.
+- Third-party requested prices can exceed the floor, but cannot undercut it. Source Technology JSON files remain unchanged.
+- Balancing covers material selection, technology synchronization and loaded vehicle builds.
+- Invalid or numerically unsupported materials are excluded from the dropdown; loaded structures using them fall back to RHA with a warning.
+- Inspector shows weight efficiency, effective price and any balance correction.
+- Optional pack: 11 distinct gameplay presets, with an equal-protection comparison in its README. Includes a new magnesium-alloy option.
 
-- Updates armour mass, cached component mass, and total vehicle mass through Sprocket's native rebuild route.
-- Retains the selected material when saving and loading the vehicle.
-- Includes a button to reload the available materials while playing.
-
-Mass updates and saving/loading have been tested. This plugin is vibe coded with AI assistance.
+Mass, costs and saving/loading have been checked in-game by the author. This plugin is vibe coded with AI assistance.
 
 Requires Sprocket 0.2.55.5 and a working Sprocket Mod Loader / BepInEx 6 IL2CPP setup. Quality of Life is optional.
 
-Download `SprocketMaterialSelector.dll` and put it in `Sprocket\BepInEx\plugins\` while the game is closed. The optional materials pack ZIP contains JSON files to copy into `Sprocket_Data\StreamingAssets\Technology`.
+Close Sprocket, replace SprocketMaterialSelector.dll in Sprocket\BepInEx\plugins\, then copy the optional pack's JSON files into Sprocket_Data\StreamingAssets\Technology, replacing the previous pack files. Vanilla RHA and SheetMetal are not included or overwritten.
+
+Updated material presets also affect existing vehicles saved with those material IDs. Back up saves before upgrading. The preset values and dates are gameplay choices; filler/liner names do not imply full real-world reactive-armour or spall-catching simulation.

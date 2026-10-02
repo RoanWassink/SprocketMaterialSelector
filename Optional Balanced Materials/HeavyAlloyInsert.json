@@ -4,8 +4,8 @@
   "type": "heavyAlloyInsert",
   "date": "1975.01.01",
   "properties": {
-    "rhaFactor": 1.45,
-    "costMultiplier": 8.0,
+    "rhaFactor": 1.5,
+    "costMultiplier": 7,
     "spallFactor": 0.00035,
     "density": 17500
   }

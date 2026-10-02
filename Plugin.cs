@@ -18,7 +18,7 @@ using UnityEngine.Events;
 
 namespace SprocketMaterialSelector;
 
-[BepInPlugin("nl.roan.sprocket.materialselector", "Sprocket Material Selector", "0.3.1")]
+[BepInPlugin("nl.roan.sprocket.materialselector", "Sprocket Material Selector", "0.4.0")]
 public sealed class Plugin : BasePlugin
 {
     internal static ManualLogSource ModLog = null!;
@@ -38,6 +38,7 @@ public sealed class Plugin : BasePlugin
             MaterialDatabase.Reload();
             var harmony = new Harmony("nl.roan.sprocket.materialselector");
             harmony.PatchAll(typeof(MaterialSelectorPanel));
+            harmony.PatchAll(typeof(RuntimeMaterialBalance));
 
             Log.LogInfo(
                 $"Sprocket Material Selector loaded. " +
@@ -59,16 +60,19 @@ internal sealed class ArmourMaterial
     internal float Density { get; init; }
     internal float SpallFactor { get; init; }
     internal float CostMultiplier { get; init; }
+    internal MaterialBalanceResult Balance { get; init; }
 }
 
 internal static class MaterialDatabase
 {
     internal static readonly List<ArmourMaterial> Materials = new();
+    internal static readonly HashSet<string> RejectedIds = new(StringComparer.Ordinal);
     internal static Il2CppSystem.Collections.Generic.List<string> Labels { get; private set; } = new();
 
     internal static void Reload()
     {
         Materials.Clear();
+        RejectedIds.Clear();
         Labels = new Il2CppSystem.Collections.Generic.List<string>();
 
         var technologyDir = Path.Combine(
@@ -104,6 +108,19 @@ internal static class MaterialDatabase
                 var density = properties.TryGetProperty("density", out var d) ? Number(d) : 0f;
                 var spall = properties.TryGetProperty("spallFactor", out var s) ? Number(s) : 0f;
                 var cost = properties.TryGetProperty("costMultiplier", out var c) ? Number(c) : 0f;
+                var balance = MaterialBalance.Calculate(rha, density, cost);
+                if (!balance.IsValid || !float.IsFinite(spall) || spall < 0)
+                {
+                    RejectedIds.Add(id);
+                    Plugin.ModLog.LogWarning($"[Material Balance] Rejected {id}: rhaFactor={rha}, density={density}. " +
+                        (balance.IsValid ? "Invalid spall factor." : balance.ValidationError));
+                    continue;
+                }
+                var report = $"[Material Balance] {id}: requestedCost={cost:0.000}, " +
+                    $"minimumCost={balance.MinimumCostMultiplier:0.000}, effectiveCost={balance.EffectiveCostMultiplier:0.000}, " +
+                    $"thicknessEfficiency={balance.ThicknessEfficiency:0.000}, weightEfficiency={balance.WeightEfficiency:0.000}";
+                if (balance.WasAdjusted) Plugin.ModLog.LogInfo(report);
+                else Plugin.ModLog.LogDebug(report);
 
                 Materials.Add(new ArmourMaterial
                 {
@@ -113,12 +130,13 @@ internal static class MaterialDatabase
                     RhaFactor = rha,
                     Density = density,
                     SpallFactor = spall,
-                    CostMultiplier = cost
+                    CostMultiplier = cost,
+                    Balance = balance
                 });
             }
             catch (Exception ex)
             {
-                Plugin.ModLog.LogDebug(
+                Plugin.ModLog.LogWarning(
                     $"Ignoring Technology file '{Path.GetFileName(file)}': {ex.Message}");
             }
         }
@@ -130,7 +148,7 @@ internal static class MaterialDatabase
             .ToList();
 
         Materials.Clear();
-        Materials.AddRange(deduped);
+        Materials.AddRange(deduped.Where(m => !RejectedIds.Contains(m.Id)));
 
         Materials.Sort((a, b) =>
         {
@@ -271,6 +289,10 @@ internal static class MaterialSelectorPanel
                     $"{current.Density:0} kg/mÂ³ | " +
                     $"spall {current.SpallFactor:0.####}",
                     2);
+                ui.InfoField($"Weight efficiency: {current.Balance.WeightEfficiency:0.##}x | " +
+                    $"Cost: {component.armourCostMultiplier:0.00}x", 2);
+                if (current.Balance.WasAdjusted)
+                    ui.InfoField($"Requested: {current.CostMultiplier:0.00}x | Balanced minimum applied", 2);
 
                 var tip = new UITooltip(
                     "Reload armour materials",
@@ -352,7 +374,9 @@ internal static class MaterialSelectorPanel
                     $"After vanilla build [{component.armourTechID}] | " +
                     $"armour mass {before.ArmourMass:0.###} -> {armourMass:0.###} | " +
                     $"CachedMass {before.CachedMass:0.###} -> {cachedMass:0.###} | " +
-                    $"Vehicle.Mass {before.VehicleMass:0.###} -> {__instance.Mass:0.###}");
+                    $"Vehicle.Mass {before.VehicleMass:0.###} -> {__instance.Mass:0.###} | " +
+                    $"effectiveCostMultiplier={component.armourCostMultiplier:0.000}, " +
+                    $"armourMaterialCost={component.GetCost(MassType.Armour, CostType.Material):0.###}");
 
                 if (component.armourTechID != before.MaterialId ||
                     Math.Abs(component.armourDensity - before.Density) > 0.01f ||

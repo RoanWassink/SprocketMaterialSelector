@@ -2,9 +2,9 @@
 
 A vibe-coded BepInEx IL2CPP plugin that adds an **Armour material** dropdown to Sprocket's plate structure editor. Pick custom armour materials for your hull, turret, or other plate structures.
 
-**Built with AI assistance.** Mass updates and vehicle saving/loading have been tested and work.
-<img width="666" height="447" alt="{1C800944-F5EE-4A59-884C-092D6C36405C}" src="https://github.com/user-attachments/assets/28fd5705-8f84-4877-b51a-c8dbd489e943" />
+**Built with AI assistance.** Mass updates, vehicle saving/loading and runtime cost balancing have been tested in-game.
 
+<img width="666" height="447" alt="Armour material selector in Sprocket" src="https://github.com/user-attachments/assets/28fd5705-8f84-4877-b51a-c8dbd489e943" />
 
 ## Requirements
 
@@ -27,6 +27,21 @@ A vibe-coded BepInEx IL2CPP plugin that adds an **Armour material** dropdown to 
 No compiling needed. Back up your vehicle saves before experimenting.
 
 ## Custom materials
+
+Version 0.4.0 applies an automatic runtime cost floor based on protection per
+millimetre and protection per kilogram. Authors can request a higher price;
+lower prices are raised to the calculated minimum. Original JSON files are
+unchanged. Invalid or numerically unsupported materials are excluded from the
+dropdown; loaded structures using them fall back to RHA with a warning.
+
+The inspector displays weight efficiency, the effective runtime multiplier and,
+when the floor applies, the requested multiplier. Vanilla RHA remains the reference:
+1.0 RHA factor, 7850 kg/m³ and 2.0 cost multiplier.
+
+The v0.4.0 optional pack has 11 presets: budget structural/cast steel, high-hardness
+and premium armour steel, aluminium, magnesium, titanium, ceramic, heavy-alloy
+inserts, elastomer filler and aramid liner. Its README compares thickness, mass and
+material cost at equal protection. These are gameplay presets, not real engineering data.
 
 Put custom armour material JSON files in:
 
@@ -53,6 +68,12 @@ dotnet build -c Release -p:GameDir="C:\Program Files (x86)\Steam\steamapps\commo
 ```
 
 The output is `bin\Release\net6.0\SprocketMaterialSelector.dll`. The included `build-install.ps1` builds and installs it while the game is closed. Game and loader assemblies are referenced from your local installation and are not included here.
+
+Run the independent balance regression checks with:
+
+```powershell
+dotnet run --project tests/MaterialBalance.Tests.csproj -c Release
+```
 
 ## Credits
 

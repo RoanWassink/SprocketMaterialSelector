@@ -4,8 +4,8 @@
   "type": "highHardnessSteel",
   "date": "1945.01.01",
   "properties": {
-    "rhaFactor": 1.12,
-    "costMultiplier": 2.8,
+    "rhaFactor": 1.16,
+    "costMultiplier": 5,
     "spallFactor": 0.00065,
     "density": 7850
   }

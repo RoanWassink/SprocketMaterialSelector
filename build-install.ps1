@@ -5,7 +5,7 @@ param(
 $ErrorActionPreference = "Stop"
 $Project = Join-Path $PSScriptRoot "SprocketMaterialSelector.csproj"
 
-Write-Host "Building Sprocket Material Selector v0.3.1 (BepInEx)..." -ForegroundColor Cyan
+Write-Host "Building Sprocket Material Selector v0.4.0 (BepInEx)..." -ForegroundColor Cyan
 dotnet build $Project -c Release -nologo "-p:GameDir=$GameDir"
 if ($LASTEXITCODE) { throw "Build failed." }
 

@@ -4,8 +4,8 @@
   "type": "castArmour",
   "date": "1935.01.01",
   "properties": {
-    "rhaFactor": 0.95,
-    "costMultiplier": 1.7,
+    "rhaFactor": 0.9,
+    "costMultiplier": 1.3,
     "spallFactor": 0.00065,
     "density": 7850
   }

@@ -5,7 +5,7 @@
   "date": "1965.01.01",
   "properties": {
     "rhaFactor": 0.72,
-    "costMultiplier": 6.0,
+    "costMultiplier": 9,
     "spallFactor": 0.0005,
     "density": 4430
   }

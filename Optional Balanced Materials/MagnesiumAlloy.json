@@ -1,0 +1,12 @@
+{
+  "v": "0.0",
+  "id": "",
+  "type": "magnesiumAlloy",
+  "date": "1960.01.01",
+  "properties": {
+    "rhaFactor": 0.3,
+    "costMultiplier": 8,
+    "spallFactor": 0.001,
+    "density": 1800
+  }
+}

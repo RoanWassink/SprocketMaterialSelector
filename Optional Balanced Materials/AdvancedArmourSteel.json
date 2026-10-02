@@ -4,8 +4,8 @@
   "type": "advancedArmourSteel",
   "date": "1970.01.01",
   "properties": {
-    "rhaFactor": 1.18,
-    "costMultiplier": 4.0,
+    "rhaFactor": 1.3,
+    "costMultiplier": 8,
     "spallFactor": 0.00045,
     "density": 7850
   }

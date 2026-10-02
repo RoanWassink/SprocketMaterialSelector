@@ -6,7 +6,7 @@
   "properties": {
     "rhaFactor": 0.07,
     "costMultiplier": 1.8,
-    "spallFactor": 0.0,
+    "spallFactor": 0,
     "density": 1200
   }
 }

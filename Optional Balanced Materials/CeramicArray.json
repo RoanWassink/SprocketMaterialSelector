@@ -4,8 +4,8 @@
   "type": "ceramicArray",
   "date": "1965.01.01",
   "properties": {
-    "rhaFactor": 0.82,
-    "costMultiplier": 6.5,
+    "rhaFactor": 0.65,
+    "costMultiplier": 14,
     "spallFactor": 0.0015,
     "density": 3600
   }

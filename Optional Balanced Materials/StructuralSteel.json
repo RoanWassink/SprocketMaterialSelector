@@ -4,8 +4,8 @@
   "type": "structuralSteel",
   "date": "1916.01.01",
   "properties": {
-    "rhaFactor": 0.65,
-    "costMultiplier": 1.0,
+    "rhaFactor": 0.7,
+    "costMultiplier": 0.6,
     "spallFactor": 0.001,
     "density": 7850
   }
