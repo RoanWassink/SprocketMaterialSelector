@@ -78,3 +78,6 @@ dotnet run --project tests/MaterialBalance.Tests.csproj -c Release
 ## Credits
 
 Created by RoanWassink with AI assistance. The native inspector integration follows the pattern used by Hans21223's *Sprocket Quality of Life*.
+
+## Donations
+For ChatGPT budget. Helps me reverse engineer sprocket to add cool mods. https://www.paypal.com/donate/?hosted_button_id=7PE3SDBETXFQ6
