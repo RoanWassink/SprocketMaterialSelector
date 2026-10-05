@@ -1,0 +1,1 @@
+# Additional configuration details are in ARMOUR-RESPONSES.md.

@@ -1,9 +1,7 @@
 bin/
 obj/
-.research/
-github-upload/
-.vs/
-.idea/
-*.user
-*.suo
-*.log
+backups/
+work/
+outputs/
+*.dll
+*.pdb

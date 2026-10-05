@@ -1,83 +1,37 @@
-# Sprocket Material Selector
+# Sprocket MaterialSelector
 
-A vibe-coded BepInEx IL2CPP plugin that adds an **Armour material** dropdown to Sprocket's plate structure editor. Pick custom armour materials for your hull, turret, or other plate structures.
+Choose armour materials with different protection, density, spall and cost characteristics.
 
-**Built with AI assistance.** Mass updates, vehicle saving/loading and runtime cost balancing have been tested in-game.
-
-<img width="666" height="447" alt="Armour material selector in Sprocket" src="https://github.com/user-attachments/assets/28fd5705-8f84-4877-b51a-c8dbd489e943" />
+**v0.4.4 — beta.** Adds glass/textolite, NERA, light ERA, passive composite and a heavier Kontakt-5-inspired ERA cassette. Cold War availability and material labels are clearer, and native Technology files with trailing commas can be read. Reactive effects require the matching Shell Selector and response catalogue.
 
 ## Requirements
 
-- Sprocket **0.2.55.5** (Unity **6000.3.21f1**).
-- A working **Sprocket Mod Loader / BepInEx 6 IL2CPP** setup—the same environment used by Hans21223's *Sprocket Quality of Life*.
-- Quality of Life itself is optional.
+- Sprocket **0.2.55.5**, Windows x64, Unity 6000.3.21f1.
+- A working **Sprocket Mod Loader / BepInEx 6 IL2CPP (6.0.0-be.788)** setup with its runtime and generated interop. Loader installation is separate. Stock BepInEx alone is not claimed equivalent to the tested Sprocket-specific setup.
+- Quality of Life is not required or included. Other game versions have not been verified.
 
-## Installation
+## Install and update
 
-1. Run the game once with the mod loader installed, then close it.
-2. Download **SprocketMaterialSelector.dll** from this repository's **Releases** section.
-3. Drop the DLL into:
+1. Install a working Sprocket Mod Loader / BepInEx 6 IL2CPP setup, run Sprocket once, then close it. The loader is a separate prerequisite and is not included.
+2. Download **SprocketMaterialSelector-v0.4.4.zip** from [this release](https://github.com/RoanWassink/SprocketMaterialSelector/releases/tag/v0.4.4).
+3. In Steam, use Sprocket > Manage > Browse local files. Copy the ZIP's folders into the folder containing Sprocket.exe. Merge folders; keep the internal structure intact.
+4. Keep one copy of each plugin. Back up matching mod files and vehicle saves before updating. Never replace the whole BepInEx folder.
+5. Preserve existing BepInEx/config files, customized thermal-models.json and sound overrides. Install required dependencies separately. Restart the game.
 
-   ```text
-   Sprocket\BepInEx\plugins\
-   ```
+## Usage, controls and settings
 
-4. Launch the game, select a plate structure, and open **Armour material** in its editor.
+Select an armour plate's material in its inspector. Density changes weight, RHA factor changes passive resistance, spall factor changes fragments, and price is constrained by a native balance floor. Material Selector alone does not produce active ERA/NERA benefits: use matching Shell Selector and an enabled response catalogue, plus the Cold War core for era-dependent recipes. New material definitions and the complete additive heavy ERA entry are provided under examples. See [armour setup and customization](ARMOUR-RESPONSES.md). Existing material/Technology edits must be backed up and merged rather than silently replaced.
 
-No compiling needed. Back up your vehicle saves before experimenting.
+## Troubleshooting, saves and rollback
 
-## Custom materials
+If the mod is absent, check BepInEx/LogOutput.log for the mod name, missing dependencies, duplicate plugin versions or invalid configuration. When this mod requires Keybinds, missing/incompatible Keybinds causes the mod to be skipped; old direct-key CFG entries do not replace that requirement. Preserve a malformed file for inspection instead of overwriting all your settings. Restart after repairs.
 
-Version 0.4.0 applies an automatic runtime cost floor based on protection per
-millimetre and protection per kilogram. Authors can request a higher price;
-lower prices are raised to the calculated minimum. Original JSON files are
-unchanged. Invalid or numerically unsupported materials are excluded from the
-dropdown; loaded structures using them fall back to RHA with a warning.
+Restore your backed-up mod files and settings together for rollback. Do not delete an entire shared folder. Custom parts/materials may be referenced by vehicle saves: return affected vehicles to stock parts/materials and save before uninstalling. Keep save backups; installed mods and release archives do not back up every vehicle automatically.
 
-The inspector displays weight efficiency, the effective runtime multiplier and,
-when the floor applies, the requested multiplier. Vanilla RHA remains the reference:
-1.0 RHA factor, 7850 kg/m³ and 2.0 cost multiplier.
+## Credits and support
 
-The v0.4.0 optional pack has 11 presets: budget structural/cast steel, high-hardness
-and premium armour steel, aluminium, magnesium, titanium, ceramic, heavy-alloy
-inserts, elastomer filler and aramid liner. Its README compares thickness, mass and
-material cost at equal protection. These are gameplay presets, not real engineering data.
+Made with AI assistance. Mod code is MIT licensed; native Sprocket meshes/icons are resolved from your installed game and are not bundled. Donation: [Support my ChatGPT budget and help me reverse engineer Sprocket to make more mods](https://www.paypal.com/donate/?hosted_button_id=7PE3SDBETXFQ6).
 
-Put custom armour material JSON files in:
+## Where to get the separate loader
 
-```text
-Sprocket\Sprocket_Data\StreamingAssets\Technology\
-```
-
-Use **Reload armour materials** to pick up new files without restarting the game. The dropdown discovers JSON entries containing `type` and `properties.rhaFactor`.
-
-An optional gameplay-oriented materials pack is included in **Optional Balanced Materials**. Copy its JSON files into the Technology folder. See the pack's README for details; these are gameplay approximations.
-
-## Troubleshooting
-
-Check `Sprocket\BepInEx\LogOutput.log` for messages containing `Sprocket Material Selector`. After changing a material, `After vanilla build` reports the updated armour, component, and vehicle masses.
-
-When reporting an issue, include your game/mod-loader version, what you did, and the relevant log lines.
-
-## Building from source
-
-For contributors: install the .NET SDK and start the game once with the working mod loader so `BepInEx\interop` exists.
-
-```powershell
-dotnet build -c Release -p:GameDir="C:\Program Files (x86)\Steam\steamapps\common\Sprocket"
-```
-
-The output is `bin\Release\net6.0\SprocketMaterialSelector.dll`. The included `build-install.ps1` builds and installs it while the game is closed. Game and loader assemblies are referenced from your local installation and are not included here.
-
-Run the independent balance regression checks with:
-
-```powershell
-dotnet run --project tests/MaterialBalance.Tests.csproj -c Release
-```
-
-## Credits
-
-Created by RoanWassink with AI assistance. The native inspector integration follows the pattern used by Hans21223's *Sprocket Quality of Life*.
-
-## Donations
-For ChatGPT budget. Helps me reverse engineer sprocket to add cool mods. https://www.paypal.com/donate/?hosted_button_id=7PE3SDBETXFQ6
+Use [Hans21223's Sprocket Mod Loader](https://github.com/Hans21223/Sprocket-Mod-Loader) and follow its [manual installation guide](https://github.com/Hans21223/Sprocket-Mod-Loader/blob/main/package/MANUAL-INSTALL.md) or its documented manager installation. That upstream project targets the tested Sprocket version and supplies the Sprocket-specific patch. These mod downloads do not install the loader. Follow one upstream loader method and its update/backup instructions; the creator's supplied ModManager archive is not redistributed here.

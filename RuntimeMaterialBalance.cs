@@ -20,7 +20,8 @@ internal static class RuntimeMaterialBalance
     private static MaterialBalanceResult Read(PlateStructure component)
     {
         var result = MaterialBalance.Calculate(component.damageModelParameters.RhaFactor,
-            component.armourDensity, component.armourCostMultiplier);
+            component.armourDensity, ArmourResponses.RequestedPrice(component.armourCostMultiplier,
+                ResponseUi.Find(component.armourTechID)));
         var spall = component.damageModelParameters.SpallFactor;
         return !float.IsFinite(spall) || spall < 0
             ? result with { IsValid = false, ValidationError = "Invalid runtime spall factor." }
@@ -76,7 +77,7 @@ internal static class RuntimeMaterialBalance
         // This final check also covers native inlining and materials loaded
         // without ever opening our dropdown. Vehicle totals are calculated later.
         var result = Read(__instance);
-        var corrected = result.WasAdjusted;
+        var corrected = result.WasAdjusted || result.EffectiveCostMultiplier != __instance.armourCostMultiplier;
         if (!result.IsValid || !MaterialBalance.TryMaterialCost(
                 __instance.GetMass(MassType.Armour), result.EffectiveCostMultiplier,
                 Sprocket.Constants.CostPerKgOfArmour, out var cost))
@@ -98,3 +99,4 @@ internal static class RuntimeMaterialBalance
         if (corrected) __instance.SetCost(cost, MassType.Armour, CostType.Material);
     }
 }
+

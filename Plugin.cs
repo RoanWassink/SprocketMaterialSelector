@@ -18,7 +18,7 @@ using UnityEngine.Events;
 
 namespace SprocketMaterialSelector;
 
-[BepInPlugin("nl.roan.sprocket.materialselector", "Sprocket Material Selector", "0.4.0")]
+[BepInPlugin("nl.roan.sprocket.materialselector", "Sprocket Material Selector", "0.4.4")]
 public sealed class Plugin : BasePlugin
 {
     internal static ManualLogSource ModLog = null!;
@@ -35,6 +35,7 @@ public sealed class Plugin : BasePlugin
 
         try
         {
+            ResponseUi.Reload();
             MaterialDatabase.Reload();
             var harmony = new Harmony("nl.roan.sprocket.materialselector");
             harmony.PatchAll(typeof(MaterialSelectorPanel));
@@ -89,12 +90,10 @@ internal static class MaterialDatabase
         {
             try
             {
-                using var doc = JsonDocument.Parse(File.ReadAllText(file));
+                using var doc = TechnologyReader.Parse(File.ReadAllText(file));
                 var root = doc.RootElement;
 
-                if (!root.TryGetProperty("type", out var typeElement) ||
-                    !root.TryGetProperty("properties", out var properties) ||
-                    !properties.TryGetProperty("rhaFactor", out var rhaElement))
+                if (!TechnologyReader.TryMaterial(root, out var typeElement, out var properties, out var rhaElement))
                     continue;
 
                 var id = typeElement.GetString();
@@ -257,7 +256,12 @@ internal static class MaterialSelectorPanel
             try
             {
                 var currentId = ReadArmourTechId(component) ?? "rha";
-                var selectedIndex = MaterialDatabase.Materials.FindIndex(
+                ResponseUi.DescribeAvailability(ui, component);
+                var visible = MaterialDatabase.Materials.Where(m => ResponseUi.EraAllowed(component, m.Id)).ToList();
+                if (visible.Count == 0) return;
+                var labels = new Il2CppSystem.Collections.Generic.List<string>();
+                foreach (var material in visible) labels.Add(MaterialAvailability.Label(material.Id, material.Label) + " (" + material.Density.ToString("0") + " kg/m³)");
+                var selectedIndex = visible.FindIndex(
                     m => string.Equals(m.Id, currentId, StringComparison.Ordinal));
 
                 if (selectedIndex < 0)
@@ -265,13 +269,16 @@ internal static class MaterialSelectorPanel
 
                 ui.Dropdown(
                     "Material",
-                    MaterialDatabase.Labels.Cast<Il2CppSystem.Collections.Generic.IReadOnlyList<string>>(),
+                    labels.Cast<Il2CppSystem.Collections.Generic.IReadOnlyList<string>>(),
                     selectedIndex,
                     Ui.IntCallback(index =>
                     {
                         Ui.Guard("Set armour material", () =>
                         {
-                            ApplyMaterial(component, index);
+                            if (index < 0 || index >= visible.Count) return;
+                            var materialId = visible[index].Id;
+                            if (!ResponseUi.EraAllowed(component, materialId)) return;
+                            ApplyMaterial(component, MaterialDatabase.Materials.FindIndex(m => m.Id == materialId));
 
                             // Like QoL's inspector features: explicitly request a redraw,
                             // otherwise the old text can remain on screen.
@@ -281,8 +288,7 @@ internal static class MaterialSelectorPanel
                     "Armour technology for this entire plate structure. " +
                     "Entries are read automatically from Sprocket_Data/StreamingAssets/Technology.");
 
-                var current = MaterialDatabase.Materials[
-                    Math.Clamp(selectedIndex, 0, MaterialDatabase.Materials.Count - 1)];
+                var current = visible[Math.Clamp(selectedIndex, 0, visible.Count - 1)];
 
                 ui.InfoField(
                     $"{current.RhaFactor:0.##}x RHA | " +
@@ -294,6 +300,8 @@ internal static class MaterialSelectorPanel
                 if (current.Balance.WasAdjusted)
                     ui.InfoField($"Requested: {current.CostMultiplier:0.00}x | Balanced minimum applied", 2);
 
+                ResponseUi.Describe(ui, component);
+
                 var tip = new UITooltip(
                     "Reload armour materials",
                     "Rescans Sprocket_Data/StreamingAssets/Technology without restarting the game.");
@@ -302,6 +310,7 @@ internal static class MaterialSelectorPanel
                     "Reload armour materials",
                     Ui.Callback(() =>
                     {
+                        ResponseUi.Reload();
                         MaterialDatabase.Reload();
                         __instance.RequestRedraw();
                     }),
@@ -385,3 +394,4 @@ internal static class MaterialSelectorPanel
             }
         });
 }
+
