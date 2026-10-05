@@ -10,8 +10,7 @@ var catalog = ArmourResponses.Parse(json);
 Check(!catalog.Enabled, "Candidate must default disabled");
 Check(catalog.Responses.Count == 5, "Five additive candidates");
 Check(MaterialBalance.Calculate(1,7850,2).EffectiveCostMultiplier == 2, "RHA price unchanged");
-Check(ArmourResponses.ColdWarEra("Coldwar"), "Native Coldwar name");
-Check(!ArmourResponses.ColdWarEra("Latewar") && !ArmourResponses.ColdWarEra(null), "Unknown/earlier design era fails closed");
+Check(MaterialEraPolicy.MinimumDate == new DateTime(1945,9,3), "Modern armour date floor");
 var controlCost = 785 * 2 * .24299585819244385;
 var lines = new List<string>{"responseId,areaM2,totalMassKg,cassetteThicknessMm,cassetteMassKg,backingThicknessMm,backingMassKg,volumeM3,effectiveMultiplier,materialCostUnits,ratioToRha,nativeAssembly,passiveResistanceMm"};
 foreach (var response in catalog.Responses)
@@ -124,12 +123,12 @@ if(args.Length>0)
     Console.WriteLine($"Read-only installed Technology scan: {parsed} parsed; {materialCount} material candidates; {otherCount} other assets skipped; {parseFailures} malformed JSON files.");
 }
 
-Check(MaterialAvailability.Evaluate("Coldwar",true,true)==MaterialAvailabilityStatus.Available,"ColdWar material in actual technology frame shown");
-Check(MaterialAvailability.Evaluate("Coldwar",true,false)==MaterialAvailabilityStatus.NotInTechnologyFrame,"Missing native technology diagnosed separately");
-Check(MaterialAvailability.Evaluate("Coldwar",false,false)==MaterialAvailabilityStatus.MissingTechnologyFrame,"Missing technology frame diagnosed");
-Check(MaterialAvailability.Evaluate(null,true,true)==MaterialAvailabilityStatus.UnknownDesignEra,"Promoted tech frame does not supply missing design era");
-Check(MaterialAvailability.Evaluate("Latewar",true,true)==MaterialAvailabilityStatus.RequiresColdWar,"Promoted technology does not unlock ERA on LateWar design");
-Check(MaterialAvailability.Evaluate("Coldwar",true,true)==MaterialAvailabilityStatus.Available,"Global response disabled does not hide eligible passive cassette");
+Check(MaterialAvailability.Evaluate(true,true,true)==MaterialAvailabilityStatus.Available,"ColdWar material in actual technology frame shown");
+Check(MaterialAvailability.Evaluate(true,true,false)==MaterialAvailabilityStatus.NotInTechnologyFrame,"Missing native technology diagnosed separately");
+Check(MaterialAvailability.Evaluate(true,false,false)==MaterialAvailabilityStatus.MissingTechnologyFrame,"Missing technology frame diagnosed");
+Check(MaterialAvailability.Evaluate(null,true,true)==MaterialAvailabilityStatus.UnknownDesignDate,"Promoted tech frame does not supply missing date/timeline evidence");
+Check(MaterialAvailability.Evaluate(false,true,true)==MaterialAvailabilityStatus.RequiresPostwarDesign,"Promoted technology does not unlock ERA before date floor");
+Check(MaterialAvailability.Evaluate(true,true,true)==MaterialAvailabilityStatus.Available,"Global response disabled does not hide eligible passive cassette");
 Check(MaterialAvailability.Label("cwepLightEraCassette","oldLabel").Contains("ERA"),"Clear ERA menu label");
 Check(MaterialAvailability.Label("customUserMaterial","Custom title")=="Custom title","Preserve unrelated custom material display name");
 
@@ -152,5 +151,43 @@ Reject(o => Heavy(o)["era"]!["cellPitchM"] = 0, "Heavy needs finite cells");
 Reject(o => Heavy(o)["geometry"]!["mode"] = "resolvedLayers", "Heavy must declare complete cassette");
 Reject(o => Heavy(o)["calibration"]!["heatRetention"] = .39, "Heavy respects original chemical cap");
 Reject(o => Heavy(o)["calibration"]!["intactRodRetention"] = .64, "Heavy respects original kinetic cap");
+// Exact parity with the inspected Thermal reference, including malformed timelines.
+var timelines = new DateTime[][] {
+    new[] { new DateTime(1910,1,1), new DateTime(1939,9,1), new DateTime(1945,9,3) },
+    new[] { new DateTime(1910,1,1), new DateTime(1945,9,3), new DateTime(1945,12,1), new DateTime(1960,1,1) },
+    new[] { new DateTime(1910,1,1), new DateTime(1945,1,1) },
+    new[] { new DateTime(1910,1,1), new DateTime(1945,9,2) },
+    new[] { new DateTime(1960,1,1), new DateTime(2026,1,1) },
+    Array.Empty<DateTime>(),
+    new[] { new DateTime(1910,1,1), new DateTime(1910,1,1) },
+    new[] { new DateTime(1960,1,1), new DateTime(1945,9,3) },
+    new[] { new DateTime(1910,1,1), DateTime.MaxValue },
+    new[] { DateTime.MaxValue }
+};
+var dates = new DateTime?[] { null, new DateTime(1900,1,1), new DateTime(1910,1,1),
+    new DateTime(1945,1,1), new DateTime(1945,9,2), new DateTime(1945,9,3),
+    new DateTime(1945,12,1), new DateTime(1950,1,1), new DateTime(1960,1,1),
+    new DateTime(1991,12,31), new DateTime(1992,1,1), new DateTime(2026,1,1),
+    new DateTime(2099,1,1), new DateTime(9998,12,31), DateTime.MaxValue };
+foreach (var timeline in timelines)
+    foreach (var date in dates)
+        Check(MaterialEraPolicy.Allows(date,timeline) == SprocketThermalSight.ThermalEraPolicy.Allows(date,timeline),
+            "Material date policy agrees with current Thermal reference");
+Check(!MaterialEraPolicy.Allows(new DateTime(1945,9,2),timelines[0]), "Day before floor blocked");
+Check(MaterialEraPolicy.Allows(new DateTime(1945,9,3),timelines[0]), "Exact floor included");
+Check(MaterialEraPolicy.Allows(new DateTime(1945,12,1),timelines[1]), "Later same-year custom era allowed");
+Check(MaterialEraPolicy.Allows(new DateTime(2099,1,1),timelines[1]), "No invented 1991 ceiling");
+Check(MaterialEraPolicy.Allows(DateTime.MaxValue,timelines[1]), "Sentinel uses actual later final start");
+Check(!MaterialEraPolicy.Allows(DateTime.MaxValue,timelines[2]), "Same-year pre-floor final era sentinel blocked");
+Check(!MaterialEraPolicy.Allows(DateTime.MaxValue,timelines[3]), "Final start one day before floor sentinel blocked");
+Check(!MaterialEraPolicy.Allows(new DateTime(1950,1,1),timelines[4]), "Date before known first era blocked");
+Check(MaterialEraPolicy.Evaluate(new DateTime(2026,1,1),timelines[6]) == null, "Duplicate timeline diagnosed unknown");
+Check(MaterialAvailability.Evaluate(MaterialEraPolicy.Evaluate(DateTime.MaxValue,timelines[8]),true,true)
+    == MaterialAvailabilityStatus.UnknownDesignDate, "Sentinel era metadata does not unlock technology");
+Check(MaterialAvailability.Evaluate(true,true,false) == MaterialAvailabilityStatus.NotInTechnologyFrame,
+    "Valid later custom era still requires actual native technology");
+Check(MaterialAvailability.Evaluate(false,true,true) == MaterialAvailabilityStatus.RequiresPostwarDesign,
+    "Promoted frame cannot override too early design date");
+
 Console.WriteLine($"PASS: {checks} catalogue, compatibility and mass/material-cost checks. Native assembly/impact/live validation remains pending.");
 Console.WriteLine(string.Join(Environment.NewLine,lines));

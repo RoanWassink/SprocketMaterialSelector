@@ -8,5 +8,6 @@
     <Compile Include="..\ArmourResponses.cs" Link="ArmourResponses.cs" />
       <Compile Include="..\TechnologyReader.cs" Link="TechnologyReader.cs" />
       <Compile Include="..\MaterialAvailability.cs" Link="MaterialAvailability.cs" />
+      <Compile Include="..\MaterialEraPolicy.cs" Link="MaterialEraPolicy.cs" />
   </ItemGroup>
 </Project>

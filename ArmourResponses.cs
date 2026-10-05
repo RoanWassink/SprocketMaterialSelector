@@ -17,7 +17,6 @@ internal sealed record ArmourResponseCatalogue(bool Enabled, double MaximumAddit
 // Static configuration only. No shell state, impact hooks, cell ledger or effects.
 internal static class ArmourResponses
 {
-    internal static bool ColdWarEra(string? nativeEraName) => string.Equals(nativeEraName, "Coldwar", StringComparison.OrdinalIgnoreCase);
     internal static ArmourResponseCatalogue Parse(string json)
     {
         using var doc = JsonDocument.Parse(json);
@@ -55,7 +54,7 @@ internal static class ArmourResponses
             var compatible = Strings(item.GetProperty("compatibleMaterialIds"));
             foreach (var material in compatible)
                 if (!materials.Add(material) || material is "rha" or "sheetMetal") throw new FormatException("Duplicate or protected material binding.");
-            if (Text(item, "minimumEra") != "coldwar") throw new FormatException("Candidate responses are ColdWar-only.");
+            if (Text(item, "minimumEra") != "coldwar") throw new FormatException("Unsupported modern-armour policy identifier.");
             var historical = Text(item, "historicalDate");
             if (!DateTime.TryParseExact(historical, "yyyy.MM.dd", System.Globalization.CultureInfo.InvariantCulture,
                     System.Globalization.DateTimeStyles.None, out _)) throw new FormatException("Invalid metadata date.");

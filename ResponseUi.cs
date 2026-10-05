@@ -30,7 +30,7 @@ internal static class ResponseUi
     }
 
     internal static ArmourResponse? Find(string id) => Catalogue?.Responses.FirstOrDefault(r => r.CompatibleMaterialIds.Contains(id));
-    private sealed record Context(string DesignDate, string? NativeEra, string TechDate, bool HasTech);
+    private sealed record Context(string DesignDate, string? NativeEra, string TechDate, bool HasTech, bool? PostwarDateAllowed);
     private static readonly HashSet<string> availabilitySnapshots = new(StringComparer.Ordinal);
     private static Context ReadContext(PlateStructure plate)
     {
@@ -38,13 +38,33 @@ internal static class ResponseUi
         string? eraName = null;
         var techDate = "unavailable";
         var hasTech = false;
+        bool? postwarDateAllowed = null;
         try
         {
             var design = plate.Vehicle?.DesignInfo;
             if (design != null)
             {
                 designDate = design.Date.ToString();
-                eraName = VehicleClassifications.GetEra(design.Date)?.Name;
+                var eras = VehicleClassifications.eras;
+                if (eras != null && eras.Length > 0)
+                {
+                    var starts = new DateTime[eras.Length];
+                    var valid = true;
+                    for (var i = 0; i < eras.Length; i++)
+                    {
+                        if (eras[i] == null) { valid = false; break; }
+                        var date = eras[i].StartDate;
+                        starts[i] = new DateTime(date.Year, date.Month, date.Day);
+                    }
+                    if (valid)
+                    {
+                        var date = design.Date;
+                        postwarDateAllowed = MaterialEraPolicy.Evaluate(new DateTime(date.Year, date.Month, date.Day), starts);
+                    }
+                }
+                // Name is diagnostic only; a failed name lookup cannot override a valid date.
+                try { eraName = VehicleClassifications.GetEra(design.Date)?.Name; }
+                catch (Exception ex) { if (warnings.Add("era-name-read")) Plugin.ModLog.LogWarning("Armour diagnostic era name unavailable: " + ex.Message); }
             }
             var tech = plate.Vehicle?.Tech;
             hasTech = tech != null;
@@ -54,7 +74,7 @@ internal static class ResponseUi
         {
             if (warnings.Add("era-read")) Plugin.ModLog.LogWarning("Armour availability context unavailable: " + ex.Message);
         }
-        return new(designDate, eraName, techDate, hasTech);
+        return new(designDate, eraName, techDate, hasTech, postwarDateAllowed);
     }
 
     internal static bool EraAllowed(PlateStructure plate, string materialId)
@@ -64,7 +84,7 @@ internal static class ResponseUi
         try
         {
             var inFrame = context.HasTech && plate.Vehicle.Tech.TryGetTech(materialId, out _);
-            return MaterialAvailability.Evaluate(context.NativeEra, context.HasTech, inFrame) == MaterialAvailabilityStatus.Available;
+            return MaterialAvailability.Evaluate(context.PostwarDateAllowed, context.HasTech, inFrame) == MaterialAvailabilityStatus.Available;
         }
         catch (Exception ex)
         {
@@ -84,16 +104,16 @@ internal static class ResponseUi
             var inFrame = false;
             try { inFrame = context.HasTech && plate.Vehicle.Tech.TryGetTech(id, out _); }
             catch (Exception ex) { if (warnings.Add("tech-read")) Plugin.ModLog.LogWarning("Armour availability lookup unavailable: " + ex.Message); }
-            var status = MaterialAvailability.Evaluate(context.NativeEra, context.HasTech, inFrame);
+            var status = MaterialAvailability.Evaluate(context.PostwarDateAllowed, context.HasTech, inFrame);
             details.Add($"{id}:catalogIndex={index},nativeTech={inFrame},status={status}");
             if (index < 0 || status != MaterialAvailabilityStatus.Available) missing.Add(MaterialAvailability.Label(id, id));
         }
-        var snapshot = $"plate={plate.Pointer},selected={plate.armourTechID},designDate={context.DesignDate},nativeEra={context.NativeEra ?? "unknown"},techDate={context.TechDate},responseEnabled={Catalogue?.Enabled.ToString() ?? "no catalogue"}; " + string.Join("; ", details);
+        var snapshot = $"plate={plate.Pointer},selected={plate.armourTechID},designDate={context.DesignDate},nativeEra={context.NativeEra ?? "unknown"},techDate={context.TechDate},postwarDateAllowed={context.PostwarDateAllowed?.ToString() ?? "unknown"},responseEnabled={Catalogue?.Enabled.ToString() ?? "no catalogue"}; " + string.Join("; ", details);
         if (availabilitySnapshots.Count < 64 && availabilitySnapshots.Add(snapshot))
             Plugin.ModLog.LogInfo("[Armour availability] " + snapshot);
         if (missing.Count == 0) return;
-        if (string.IsNullOrWhiteSpace(context.NativeEra)) ui.InfoField("Vehicle era unavailable: modern armour choices are hidden.", 2);
-        else if (!ArmourResponses.ColdWarEra(context.NativeEra)) ui.InfoField("Modern armour requires a Cold War vehicle design.", 2);
+        if (context.PostwarDateAllowed == null) ui.InfoField("Vehicle date or era timeline unavailable: modern armour choices are hidden.", 2);
+        else if (context.PostwarDateAllowed != true) ui.InfoField("Modern armour requires a vehicle design dated 1945-09-03 or later.", 2);
         else ui.InfoField("Some modern armour is missing from this vehicle's available technology or material files.", 2);
         ui.InfoField("Unavailable: " + string.Join(", ", missing), 2);
     }
@@ -102,7 +122,7 @@ internal static class ResponseUi
     {
         var response = Find(plate.armourTechID);
         if (response == null) return;
-        ui.InfoField($"Response: {response.ResponseId} | ColdWar candidate | provisional metadata {response.HistoricalDate}", 2);
+        ui.InfoField($"Response: {response.ResponseId} | Postwar candidate | provisional metadata {response.HistoricalDate}", 2);
         var compatible = ArmourResponses.PassiveMatches(response, plate.armourDensity,
             plate.damageModelParameters.RhaFactor, plate.damageModelParameters.SpallFactor);
         if (!compatible)

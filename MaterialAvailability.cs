@@ -1,13 +1,13 @@
 namespace SprocketMaterialSelector;
 
-internal enum MaterialAvailabilityStatus { Available, UnknownDesignEra, RequiresColdWar, MissingTechnologyFrame, NotInTechnologyFrame }
+internal enum MaterialAvailabilityStatus { Available, UnknownDesignDate, RequiresPostwarDesign, MissingTechnologyFrame, NotInTechnologyFrame }
 
 internal static class MaterialAvailability
 {
-    internal static MaterialAvailabilityStatus Evaluate(string? actualNativeEra, bool hasTechnologyFrame, bool materialInFrame)
+    internal static MaterialAvailabilityStatus Evaluate(bool? postwarDateAllowed, bool hasTechnologyFrame, bool materialInFrame)
     {
-        if (string.IsNullOrWhiteSpace(actualNativeEra)) return MaterialAvailabilityStatus.UnknownDesignEra;
-        if (!ArmourResponses.ColdWarEra(actualNativeEra)) return MaterialAvailabilityStatus.RequiresColdWar;
+        if (postwarDateAllowed == null) return MaterialAvailabilityStatus.UnknownDesignDate;
+        if (postwarDateAllowed != true) return MaterialAvailabilityStatus.RequiresPostwarDesign;
         if (!hasTechnologyFrame) return MaterialAvailabilityStatus.MissingTechnologyFrame;
         return materialInFrame ? MaterialAvailabilityStatus.Available : MaterialAvailabilityStatus.NotInTechnologyFrame;
     }

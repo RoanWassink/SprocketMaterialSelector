@@ -18,7 +18,7 @@ using UnityEngine.Events;
 
 namespace SprocketMaterialSelector;
 
-[BepInPlugin("nl.roan.sprocket.materialselector", "Sprocket Material Selector", "0.4.4")]
+[BepInPlugin("nl.roan.sprocket.materialselector", "Sprocket Material Selector", "0.4.5")]
 public sealed class Plugin : BasePlugin
 {
     internal static ManualLogSource ModLog = null!;
