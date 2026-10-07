@@ -9,6 +9,7 @@ namespace SprocketMaterialSelector;
 internal static class ResponseUi
 {
     internal static ArmourResponseCatalogue? Catalogue;
+    internal static TooltipPreconditioning? TooltipPreconditioningData;
     private static readonly HashSet<string> warnings = new();
     private static readonly HashSet<string> CandidateIds = new(StringComparer.Ordinal)
     { "cwepGlassTextolite", "cwepNeraCassette", "cwepLightEraCassette", "cwepPassiveComposite", "cwepHeavyEraCassette" };
@@ -16,11 +17,16 @@ internal static class ResponseUi
     internal static void Reload()
     {
         Catalogue = null;
+        TooltipPreconditioningData = null;
         var path = Path.Combine(Paths.ConfigPath, "sprocket.armour.responses.json");
         if (!File.Exists(path)) return; // Existing custom settings are never rewritten.
         try
         {
-            Catalogue = ArmourResponses.Parse(File.ReadAllText(path));
+            var json = File.ReadAllText(path);
+            var parsed = ArmourResponses.Parse(json);
+            var tooltipData = TooltipPreconditioning.FromValidatedCatalogue(json);
+            Catalogue = parsed;
+            TooltipPreconditioningData = tooltipData;
             Plugin.ModLog.LogInfo($"Armour responses: {Catalogue.Responses.Count} candidate descriptions; impact switch={Catalogue.Enabled}. ShellSelector owns impact/state, not this plugin.");
         }
         catch (Exception ex)
@@ -29,8 +35,32 @@ internal static class ResponseUi
         }
     }
 
+    private static bool ShellConsumerLoaded()
+    {
+        try
+        {
+            var loader = BepInEx.Unity.IL2CPP.IL2CPPChainloader.Instance;
+            if (loader == null) return false;
+            if (loader.Plugins.TryGetValue("sprocket.shellselector", out var canonical) && canonical.Instance != null) return true;
+            // Compatibility with an existing Shell installation; never the primary ID.
+            return loader.Plugins.TryGetValue("nl.roan.sprocket.shellselector", out var legacy) && legacy.Instance != null;
+        }
+        catch (Exception ex) { if (warnings.Add("shell-presence")) Plugin.ModLog.LogWarning("Shell consumer presence unavailable: " + ex.Message); return false; }
+    }
+
+    internal static string Tooltip(PlateStructure plate, string materialId, string label)
+    {
+        var response = Find(materialId);
+        var compatible = response == null || ArmourResponses.PassiveMatches(response, plate.armourDensity,
+            plate.damageModelParameters.RhaFactor, plate.damageModelParameters.SpallFactor);
+        return MaterialTooltip.Build(materialId, label,
+            new(plate.damageModelParameters.RhaFactor, plate.armourDensity,
+                plate.damageModelParameters.SpallFactor, plate.armourCostMultiplier),
+            Catalogue, TooltipPreconditioningData, ShellConsumerLoaded(), EraAllowed(plate, materialId), compatible);
+    }
+
     internal static ArmourResponse? Find(string id) => Catalogue?.Responses.FirstOrDefault(r => r.CompatibleMaterialIds.Contains(id));
-    private sealed record Context(string DesignDate, string? NativeEra, string TechDate, bool HasTech, bool? PostwarDateAllowed);
+    private sealed record Context(string DesignDate, string? NativeEra, string TechDate, bool HasTech, bool HasKnownVehicleContext);
     private static readonly HashSet<string> availabilitySnapshots = new(StringComparer.Ordinal);
     private static Context ReadContext(PlateStructure plate)
     {
@@ -38,53 +68,76 @@ internal static class ResponseUi
         string? eraName = null;
         var techDate = "unavailable";
         var hasTech = false;
-        bool? postwarDateAllowed = null;
+        var hasContext = false;
         try
         {
-            var design = plate.Vehicle?.DesignInfo;
+            var vehicle = plate.Vehicle;
+            var design = vehicle?.DesignInfo;
             if (design != null)
             {
-                designDate = design.Date.ToString();
-                var eras = VehicleClassifications.eras;
-                if (eras != null && eras.Length > 0)
-                {
-                    var starts = new DateTime[eras.Length];
-                    var valid = true;
-                    for (var i = 0; i < eras.Length; i++)
-                    {
-                        if (eras[i] == null) { valid = false; break; }
-                        var date = eras[i].StartDate;
-                        starts[i] = new DateTime(date.Year, date.Month, date.Day);
-                    }
-                    if (valid)
-                    {
-                        var date = design.Date;
-                        postwarDateAllowed = MaterialEraPolicy.Evaluate(new DateTime(date.Year, date.Month, date.Day), starts);
-                    }
-                }
-                // Name is diagnostic only; a failed name lookup cannot override a valid date.
-                try { eraName = VehicleClassifications.GetEra(design.Date)?.Name; }
+                var date = design.Date;
+                // Calendar validation only: no feature floor, era-name rule or horizon.
+                if (!MaterialAvailability.HasValidCalendarDate(date.Year, date.Month, date.Day))
+                    throw new InvalidOperationException("Invalid native vehicle date.");
+                designDate = date.ToString();
+                hasContext = true;
+                try { eraName = VehicleClassifications.GetEra(date)?.Name; }
                 catch (Exception ex) { if (warnings.Add("era-name-read")) Plugin.ModLog.LogWarning("Armour diagnostic era name unavailable: " + ex.Message); }
             }
-            var tech = plate.Vehicle?.Tech;
-            hasTech = tech != null;
-            if (tech != null) techDate = tech.Date.ToString();
+            var tech = vehicle?.Tech;
+            if (tech != null)
+            {
+                var date = tech.Date;
+                if (!MaterialAvailability.HasValidCalendarDate(date.Year, date.Month, date.Day))
+                    throw new InvalidOperationException("Invalid native technology frame date.");
+                techDate = date.ToString();
+                hasTech = true;
+            }
         }
         catch (Exception ex)
         {
-            if (warnings.Add("era-read")) Plugin.ModLog.LogWarning("Armour availability context unavailable: " + ex.Message);
+            hasContext = false;
+            hasTech = false;
+            if (warnings.Add("context-read")) Plugin.ModLog.LogWarning("Armour native technology context unavailable: " + ex.Message);
         }
-        return new(designDate, eraName, techDate, hasTech, postwarDateAllowed);
+        return new(designDate, eraName, techDate, hasTech, hasContext);
+    }
+
+    internal static string NativeDensityLabel(PlateStructure plate, string materialId)
+    {
+        try
+        {
+            if (plate.Vehicle?.Tech?.TryGetTech(materialId, out var tech) == true && tech != null)
+            {
+                var density = tech.GetFloat("density", float.NaN);
+                if (float.IsFinite(density) && density > 0) return density.ToString("0") + " kg/m³";
+            }
+        }
+        catch (Exception ex) { if (warnings.Add("recipe-read")) Plugin.ModLog.LogWarning("Armour native recipe display unavailable: " + ex.Message); }
+        return "native recipe unavailable";
+    }
+
+    internal static float? NativeRequestedCost(PlateStructure plate, string materialId)
+    {
+        try
+        {
+            if (plate.Vehicle?.Tech?.TryGetTech(materialId, out var tech) == true && tech != null)
+            {
+                var cost = tech.GetFloat("costMultiplier", float.NaN);
+                if (float.IsFinite(cost) && cost >= 0) return cost;
+            }
+        }
+        catch (Exception ex) { if (warnings.Add("recipe-read")) Plugin.ModLog.LogWarning("Armour native recipe display unavailable: " + ex.Message); }
+        return null;
     }
 
     internal static bool EraAllowed(PlateStructure plate, string materialId)
     {
-        if (!CandidateIds.Contains(materialId) && Find(materialId) == null) return true;
         var context = ReadContext(plate);
         try
         {
             var inFrame = context.HasTech && plate.Vehicle.Tech.TryGetTech(materialId, out _);
-            return MaterialAvailability.Evaluate(context.PostwarDateAllowed, context.HasTech, inFrame) == MaterialAvailabilityStatus.Available;
+            return MaterialAvailability.Evaluate(context.HasKnownVehicleContext, context.HasTech, inFrame) == MaterialAvailabilityStatus.Available;
         }
         catch (Exception ex)
         {
@@ -104,47 +157,29 @@ internal static class ResponseUi
             var inFrame = false;
             try { inFrame = context.HasTech && plate.Vehicle.Tech.TryGetTech(id, out _); }
             catch (Exception ex) { if (warnings.Add("tech-read")) Plugin.ModLog.LogWarning("Armour availability lookup unavailable: " + ex.Message); }
-            var status = MaterialAvailability.Evaluate(context.PostwarDateAllowed, context.HasTech, inFrame);
+            var status = MaterialAvailability.Evaluate(context.HasKnownVehicleContext, context.HasTech, inFrame);
             details.Add($"{id}:catalogIndex={index},nativeTech={inFrame},status={status}");
             if (index < 0 || status != MaterialAvailabilityStatus.Available) missing.Add(MaterialAvailability.Label(id, id));
         }
-        var snapshot = $"plate={plate.Pointer},selected={plate.armourTechID},designDate={context.DesignDate},nativeEra={context.NativeEra ?? "unknown"},techDate={context.TechDate},postwarDateAllowed={context.PostwarDateAllowed?.ToString() ?? "unknown"},responseEnabled={Catalogue?.Enabled.ToString() ?? "no catalogue"}; " + string.Join("; ", details);
+        var snapshot = $"plate={plate.Pointer},selected={plate.armourTechID},designDate={context.DesignDate},nativeEra={context.NativeEra ?? "unknown"},techDate={context.TechDate},knownVehicleContext={context.HasKnownVehicleContext},responseEnabled={Catalogue?.Enabled.ToString() ?? "no catalogue"}; " + string.Join("; ", details);
         if (availabilitySnapshots.Count < 64 && availabilitySnapshots.Add(snapshot))
             Plugin.ModLog.LogInfo("[Armour availability] " + snapshot);
         if (missing.Count == 0) return;
-        if (context.PostwarDateAllowed == null) ui.InfoField("Vehicle date or era timeline unavailable: modern armour choices are hidden.", 2);
-        else if (context.PostwarDateAllowed != true) ui.InfoField("Modern armour requires a vehicle design dated 1945-09-03 or later.", 2);
-        else ui.InfoField("Some modern armour is missing from this vehicle's available technology or material files.", 2);
-        ui.InfoField("Unavailable: " + string.Join(", ", missing), 2);
+        if (!context.HasKnownVehicleContext || !context.HasTech)
+            ui.InfoField("Armour choices are currently unavailable.", 1);
+        else ui.InfoField("Some armour is unavailable for this era or installation.", 1);
     }
 
     internal static void Describe(IGUIElementDrawer ui, PlateStructure plate)
     {
-        var response = Find(plate.armourTechID);
-        if (response == null) return;
-        ui.InfoField($"Response: {response.ResponseId} | Postwar candidate | provisional metadata {response.HistoricalDate}", 2);
-        var compatible = ArmourResponses.PassiveMatches(response, plate.armourDensity,
+        var id = plate.armourTechID;
+        var response = Find(id);
+        var compatible = response == null || ArmourResponses.PassiveMatches(response, plate.armourDensity,
             plate.damageModelParameters.RhaFactor, plate.damageModelParameters.SpallFactor);
-        if (!compatible)
-        {
-            ui.InfoField("Custom material differs from this preset: passive protection only.", 2);
-            if (warnings.Add("physical:" + plate.armourTechID)) Plugin.ModLog.LogWarning("Response physical mismatch for " + plate.armourTechID + "; preserve custom data and require passive fallback in ShellSelector.");
-        }
-        ui.InfoField(Catalogue!.Enabled && compatible && EraAllowed(plate, plate.armourTechID)
-            ? "Experimental response enabled; requires Shell Selector."
-            : "Response disabled: passive protection only.", 2);
-        ui.InfoField(response.Geometry.Mode == "declaredCassette"
-            ? "Internal laminate approximation; mass covers the complete cassette."
-            : "Requires measured upstream steel traversal and real downstream gap.", 2);
-        ui.InfoField($"Normal thickness range: {response.Geometry.MinNormalThicknessMm:0}-{response.Geometry.MaxNormalThicknessMm:0} mm", 2);
-        if (response.Kind == "nera") ui.InfoField("Scaled steel / rubber / steel thirds; bare elastomer is not NERA.", 2);
-        if (response.Kind == "heavyEra")
-        {
-            ui.InfoField("Kontakt-5-inspired gameplay approximation; not measured historical performance.", 2);
-            ui.InfoField($"HEAT / APFSDS share one use per {response.CellPitchM:0.00} m cell; spent cells retain passive protection.", 2);
-            ui.InfoField("Requires the heavy-ERA Shell Selector adapter and a game restart. No tandem protection is modelled.", 2);
-        }
-        if (response.Kind == "lightEra") ui.InfoField($"Single-charge HEAT: first hit per {response.CellPitchM:0.00} m cell. No APFSDS or tandem benefit.", 2);
-        ui.InfoField($"Native armour material cost: {plate.GetCost(Sprocket.Vehicles.MassType.Armour, Sprocket.Vehicles.CostType.Material):0.00} | assembly: {plate.GetCost(Sprocket.Vehicles.MassType.Armour, Sprocket.Vehicles.CostType.Assembly):0.00}", 2);
+        var summary = MaterialTooltip.Summary(id,
+            new(plate.damageModelParameters.RhaFactor, plate.armourDensity,
+                plate.damageModelParameters.SpallFactor, plate.armourCostMultiplier),
+            Catalogue, TooltipPreconditioningData, ShellConsumerLoaded(), EraAllowed(plate,id), compatible);
+        foreach (var line in summary) ui.InfoField(line, line.Length > 55 ? 2 : 1);
     }
 }

@@ -18,7 +18,7 @@ using UnityEngine.Events;
 
 namespace SprocketMaterialSelector;
 
-[BepInPlugin("nl.roan.sprocket.materialselector", "Sprocket Material Selector", "0.4.5")]
+[BepInPlugin("sprocket.materialselector", "Sprocket Material Selector", "0.4.8")]
 public sealed class Plugin : BasePlugin
 {
     internal static ManualLogSource ModLog = null!;
@@ -27,6 +27,23 @@ public sealed class Plugin : BasePlugin
     public override void Load()
     {
         ModLog = Log;
+        try
+        {
+            var migration = ConfigMigration.CopyLegacyIfNeeded(
+                Path.Combine(Paths.ConfigPath, "nl.roan.sprocket.materialselector.cfg"),
+                Path.Combine(Paths.ConfigPath, "sprocket.materialselector.cfg"));
+            if (migration != ConfigMigrationResult.NoLegacyFile)
+            {
+                Config.Reload();
+                if (migration == ConfigMigrationResult.Copied)
+                    Log.LogInfo("Material settings migrated; the legacy configuration is retained as a backup.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.LogError("Material configuration migration failed; existing settings were left untouched. " + ex.Message);
+            return;
+        }
         SectionOpen = Config.Bind(
             "UI",
             "Armour material section open",
@@ -37,7 +54,7 @@ public sealed class Plugin : BasePlugin
         {
             ResponseUi.Reload();
             MaterialDatabase.Reload();
-            var harmony = new Harmony("nl.roan.sprocket.materialselector");
+            var harmony = new Harmony("sprocket.materialselector");
             harmony.PatchAll(typeof(MaterialSelectorPanel));
             harmony.PatchAll(typeof(RuntimeMaterialBalance));
 
@@ -260,13 +277,15 @@ internal static class MaterialSelectorPanel
                 var visible = MaterialDatabase.Materials.Where(m => ResponseUi.EraAllowed(component, m.Id)).ToList();
                 if (visible.Count == 0) return;
                 var labels = new Il2CppSystem.Collections.Generic.List<string>();
-                foreach (var material in visible) labels.Add(MaterialAvailability.Label(material.Id, material.Label) + " (" + material.Density.ToString("0") + " kg/m³)");
+                foreach (var material in visible) labels.Add(MaterialAvailability.Label(material.Id, material.Label) + " (" + ResponseUi.NativeDensityLabel(component, material.Id) + ")");
                 var selectedIndex = visible.FindIndex(
                     m => string.Equals(m.Id, currentId, StringComparison.Ordinal));
 
                 if (selectedIndex < 0)
                     selectedIndex = 0;
 
+                var tooltipLabel = MaterialDatabase.Materials.FirstOrDefault(m => m.Id == currentId)?.Label ?? currentId;
+                var materialTooltip = ResponseUi.Tooltip(component, currentId, MaterialAvailability.Label(currentId, tooltipLabel));
                 ui.Dropdown(
                     "Material",
                     labels.Cast<Il2CppSystem.Collections.Generic.IReadOnlyList<string>>(),
@@ -285,26 +304,34 @@ internal static class MaterialSelectorPanel
                             __instance.RequestRedraw();
                         });
                     }),
-                    "Armour technology for this entire plate structure. " +
-                    "Entries are read automatically from Sprocket_Data/StreamingAssets/Technology.");
+                    materialTooltip);
+                ui.InfoField("Protection", materialTooltip, 1, UnityEngine.Color.white);
 
                 var current = visible[Math.Clamp(selectedIndex, 0, visible.Count - 1)];
 
-                ui.InfoField(
-                    $"{current.RhaFactor:0.##}x RHA | " +
-                    $"{current.Density:0} kg/mÂ³ | " +
-                    $"spall {current.SpallFactor:0.####}",
-                    2);
-                ui.InfoField($"Weight efficiency: {current.Balance.WeightEfficiency:0.##}x | " +
-                    $"Cost: {component.armourCostMultiplier:0.00}x", 2);
-                if (current.Balance.WasAdjusted)
-                    ui.InfoField($"Requested: {current.CostMultiplier:0.00}x | Balanced minimum applied", 2);
+                if (current.Id == currentId)
+                {
+                    // The active native component recipe is authoritative, not an
+                    // arbitrary duplicate file discovered for this technology ID.
+                    var nativeRequest = ResponseUi.NativeRequestedCost(component, currentId);
+                    var requested = ArmourResponses.RequestedPrice(nativeRequest ?? component.armourCostMultiplier,
+                        ResponseUi.Find(currentId));
+                    var active = MaterialBalance.Calculate(component.damageModelParameters.RhaFactor,
+                        component.armourDensity, requested);
+                    ui.InfoField($"{component.damageModelParameters.RhaFactor:0.##}x RHA | " +
+                        $"{component.armourDensity:0} kg/m³", 2);
+                    if (active.IsValid) ui.InfoField($"Weight efficiency: {active.WeightEfficiency:0.##}x | " +
+                        $"Cost: {component.armourCostMultiplier:0.00}x", 2);
+                    if (nativeRequest != null && active.IsValid && active.WasAdjusted)
+                        ui.InfoField($"Requested: {requested:0.00}x | Balanced minimum applied", 2);
+                }
+                else ui.InfoField("This material is unavailable for the vehicle's current era.", 1);
 
                 ResponseUi.Describe(ui, component);
 
                 var tip = new UITooltip(
                     "Reload armour materials",
-                    "Rescans Sprocket_Data/StreamingAssets/Technology without restarting the game.");
+                    "Rescans material files. Availability and recipes use the game's current Technology frame; a game restart may be required for Technology changes.");
 
                 ui.Button(
                     "Reload armour materials",

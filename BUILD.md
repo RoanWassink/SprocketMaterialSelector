@@ -1,5 +1,7 @@
-# Building the source
+# Build from source (optional)
 
-Users do not need to compile. The release DLL is the exact pinned, tested pack DLL; it is not rebuilt during publication.
+Players should use the release ZIP. Building requires .NET SDK 8 and a working local Sprocket 0.2.55.5 / BepInEx 6 IL2CPP installation with generated interop.
 
-Developers need .NET SDK 8 and a local Sprocket 0.2.55.5 loader installation with generated interop. Build the root csproj with dotnet build -c Release -p:GameDir=YOUR_GAME_DIRECTORY. Keybind consumers require the shared API DLL in that installation. All game/loader references use Private=false. No game binaries or generated caches are distributed. Run the supplied pure tests where present; they do not prove native gameplay. Keep code/runtime changes separate from personalized config edits.
+Run `dotnet build SprocketMaterialSelector.csproj -c Release -p:GameDir="C:\path\to\Sprocket"` from this source folder. Output: `bin/Release/net6.0/SprocketMaterialSelector.dll`.
+
+Game and loader assemblies are referenced locally and are not redistributed. Building does not install the plugin. Close the game and back up existing mod files before copying the resulting DLL.
