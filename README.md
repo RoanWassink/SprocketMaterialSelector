@@ -1,5 +1,7 @@
 # Sprocket Material Selector 0.5.0
 
+<!-- sp-compat {"hamish.sprocket": ">=0.2.55.5", "bepinex.bepinex": "6.0.0-be.788"} -->
+
 **New: placeable ERA modules and an in-game material editor.** Add Kontakt-1, Kontakt-5, Relikt, Nizh or Duplet armour, including turret and hull variants. The large Duplet hull module has three independently spent zones. ERA parts follow your vehicle's paint and camouflage.
 
 Edit material properties and armour responses from **Edit materials** in the plate editor. Save refreshes the current vehicle's material data and matching Shell Selector responses. Custom armour still uses Sprocket's weight and vehicle-cost system.
