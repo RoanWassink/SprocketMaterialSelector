@@ -18,7 +18,9 @@ using UnityEngine.Events;
 
 namespace SprocketMaterialSelector;
 
-[BepInPlugin("sprocket.materialselector", "Sprocket Material Selector", "0.4.8")]
+[BepInPlugin("sprocket.materialselector", "Sprocket Material Selector", "0.5.0")]
+[BepInDependency("sprocket.jsoneditor")]
+[BepInDependency("sprocket.shellselector", ">=0.13.0 <0.14.0")]
 public sealed class Plugin : BasePlugin
 {
     internal static ManualLogSource ModLog = null!;
@@ -57,6 +59,8 @@ public sealed class Plugin : BasePlugin
             var harmony = new Harmony("sprocket.materialselector");
             harmony.PatchAll(typeof(MaterialSelectorPanel));
             harmony.PatchAll(typeof(RuntimeMaterialBalance));
+            try { new Harmony("sprocket.materialselector.relikt.visual").PatchAll(typeof(ReliktPrototype)); new Harmony("sprocket.materialselector.relikt.icon").PatchAll(typeof(ReliktIcon)); EraPresetRegistry.Start(); ReliktSpentVisuals.Start(); new Harmony("sprocket.materialselector.relikt.spent").PatchAll(typeof(ReliktSpentVisuals)); }
+            catch (Exception ex) { Log.LogWarning("Optional Relikt prototype unavailable: " + ex.Message); }
 
             Log.LogInfo(
                 $"Sprocket Material Selector loaded. " +
@@ -72,7 +76,7 @@ public sealed class Plugin : BasePlugin
 internal sealed class ArmourMaterial
 {
     internal string Id { get; init; } = "";
-    internal string Label { get; init; } = "";
+    internal string Label { get; set; } = "";
     internal string SourceFile { get; init; } = "";
     internal float RhaFactor { get; init; }
     internal float Density { get; init; }
@@ -157,6 +161,7 @@ internal static class MaterialDatabase
             }
         }
 
+        MaterialEditorRefresh.ApplyLabels(Materials);
         // One entry per technology id. Prefer vanilla/common materials first.
         var deduped = Materials
             .GroupBy(m => m.Id, StringComparer.Ordinal)
@@ -305,6 +310,8 @@ internal static class MaterialSelectorPanel
                         });
                     }),
                     materialTooltip);
+                var editTip=new UITooltip("Material editor", "Create and edit materials, special behavior and protection settings.");
+                ui.Button("Edit materials",Ui.Callback(()=>SprocketJsonEditor.JsonEditor.Open(new MaterialEditorSession(()=>{MaterialEditorRefresh.Reload(component);__instance.RequestRedraw();}))),ref editTip);
                 ui.InfoField("Protection", materialTooltip, 1, UnityEngine.Color.white);
 
                 var current = visible[Math.Clamp(selectedIndex, 0, visible.Count - 1)];
@@ -329,19 +336,7 @@ internal static class MaterialSelectorPanel
 
                 ResponseUi.Describe(ui, component);
 
-                var tip = new UITooltip(
-                    "Reload armour materials",
-                    "Rescans material files. Availability and recipes use the game's current Technology frame; a game restart may be required for Technology changes.");
 
-                ui.Button(
-                    "Reload armour materials",
-                    Ui.Callback(() =>
-                    {
-                        ResponseUi.Reload();
-                        MaterialDatabase.Reload();
-                        __instance.RequestRedraw();
-                    }),
-                    ref tip);
             }
             finally
             {
@@ -421,4 +416,20 @@ internal static class MaterialSelectorPanel
             }
         });
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

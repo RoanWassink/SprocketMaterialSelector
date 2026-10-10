@@ -181,7 +181,9 @@ internal static class MaterialTooltip
         lines.Add("Total extra-loss caps across layers: HEAT " + Percent(catalogue!.MaximumAdditionalHeatLoss) +
             "; kinetic " + Percent(catalogue.MaximumAdditionalKineticLoss) + ".");
         lines.Add("Only original HEAT / APFSDS projectiles receive these configured modifiers; other threats use native passive properties.");
-        lines.Add("Values are gameplay configuration, not verified historical resistance. Restart after response-setting changes so Shell Selector reads the same catalogue.");
+        lines.Add("Values are gameplay configuration, not verified historical resistance. Use Save and refresh in the material editor after response-setting changes.");
         return string.Join("\n", lines);
     }
 }
+
+

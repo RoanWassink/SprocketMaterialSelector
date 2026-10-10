@@ -1,0 +1,12 @@
+{
+  "v": "0.0",
+  "id": "",
+  "type": "kontakt1Cassette",
+  "date": "1945.09.03",
+  "properties": {
+    "density": 4300,
+    "rhaFactor": 0.35,
+    "spallFactor": 0.25,
+    "costMultiplier": 8.25
+  }
+}

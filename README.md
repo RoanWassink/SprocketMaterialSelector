@@ -1,40 +1,37 @@
-# Sprocket Material Selector
+# Sprocket Material Selector 0.5.0
 
-Pick custom armour materials from a dropdown in the plate editor. Materials affect protection, weight, spall and the game's vehicle cost. **v0.4.8 — beta.**
+**New: placeable ERA modules and an in-game material editor.** Add Kontakt-1, Kontakt-5, Relikt, Nizh or Duplet armour, including turret and hull variants. The large Duplet hull module has three independently spent zones. ERA parts follow your vehicle's paint and camouflage.
 
-Download [SprocketMaterialSelector-v0.4.8.zip](https://github.com/RoanWassink/SprocketMaterialSelector/releases/tag/v0.4.8). You only need the download; no compiling required. GitHub's **Code > Download ZIP** gives you the source instead.
+Edit material properties and armour responses from **Edit materials** in the plate editor. Save refreshes the current vehicle's material data and matching Shell Selector responses. Custom armour still uses Sprocket's weight and vehicle-cost system.
 
 ## Requirements
 
-- Sprocket **0.2.55.5**, Windows x64 / Unity **6000.3.21f1**.
-- A working [Hans21223 Sprocket Mod Loader](https://github.com/Hans21223/Sprocket-Mod-Loader) / **BepInEx 6 IL2CPP (6.0.0-be.788)** environment. Follow the loader's own installation instructions and start the game once before adding this mod.
-- Quality of Life is optional. The loader, game files and other plugins are not included.
-- For extra HEAT/APFSDS armour reactions, use **Shell Selector 0.12.5** and a matching, enabled response catalogue. Material Selector alone provides selection and passive armour properties. Keybinds is not required.
+- Sprocket 0.2.55.5, Windows x64, Unity 6000.3.21f1.
+- A working Hans21223 Sprocket Mod Loader / BepInEx 6 IL2CPP environment.
+- **Shell Selector 0.13.0** and **Sprocket Json Editor 0.1.0**. Both are required by this version. Use the matching full pack for the easiest setup.
 
-## Install
+## Install or update
 
-1. Close Sprocket. In Steam, open **Manage > Browse local files** for the game.
-2. Put `SprocketMaterialSelector.dll` in `BepInEx/plugins`. Keep only one copy of the plugin.
-3. Copy the five included Technology JSON files to `Sprocket_Data/StreamingAssets/Technology`. If a matching file already exists, back it up and keep your edits.
-4. If you do not already have `BepInEx/config/sprocket.armour.responses.json`, copy the included starter there. It starts with extra reactions **disabled**. For those reactions, install matching Shell Selector and set `enabled` to `true`; restart after editing.
-5. Start the game, select a plate structure and choose its **Armour material**. Hover **Material** or **Protection** for strengths, thickness requirements and limitations.
+Download the release ZIP and extract it anywhere. No compiling needed. Close Sprocket, then run:
 
-## Updating and settings
+```powershell
+.\Install.ps1 -GameDirectory 'C:\Program Files (x86)\Steam\steamapps\common\Sprocket'
+```
 
-Back up the affected mod files, custom materials, settings and vehicle saves first. Replace the DLL; merge missing assets individually. **Do not extract over customized Technology or response files.** Your existing response catalogue is not automatically merged, replaced or enabled. The full five-material default catalogue is also available in `examples` in the source download for comparison.
+Use your actual Steam game folder if different. The installer updates this plugin, adds missing materials, parts, recipes and bindings, and backs up changed files. Your existing response settings and recipes win. Unrecognized customized assets are kept and reported; conflicting ERA bindings stop installation before writes. You may need to reconcile those files yourself.
 
-The plugin now uses `sprocket.materialselector.cfg`. On the first start, it copies `nl.roan.sprocket.materialselector.cfg` only if the new file does not exist. The old file stays as a backup, and an existing new file always wins. The `[UI]` setting `Armour material section open` defaults to `true`.
+Fresh standalone installs start with extra armour responses **disabled**. With the required plugins installed, enable them in the material editor or set the top-level `enabled` in `BepInEx/config/sprocket.armour.responses.json` to `true`. Updates preserve your existing value. The full pack supplies its own starter setting.
 
-Saved material IDs and the response filename remain unchanged. Material availability follows the game's Technology/date rules, including your edited Technology dates. The included five presets retain their configured date of 3 September 1945; this is a gameplay default, not a universal historical cutoff. See [armour setup](ARMOUR-RESPONSES.md) for customization.
+Select a plate to choose its armour material or open **Edit materials**. Place ERA parts through the game's applique armour menu; use normal move, rotate, mirror and duplicate controls. They have fixed dimensions.
 
-The separate **optional-balanced-materials.zip** supplies eleven additional passive gameplay presets. They are optional and do not replace vanilla RHA or sheet metal.
+## Limits
 
-## Troubleshooting and rollback
+ERA protection depends on the projectile, thickness, angle and enabled matching recipe. Each ordinary module is one spent cell; the three-zone hull variant has three. Spent cassettes hide in combat while mounts remain, and return on entering Edit. Passive collision and mass remain after spending. No chain reaction or full tandem-warhead simulation is provided. Dimensions and protection are gameplay estimates, not exact historical specifications. Premium material pricing uses native part/vehicle costs.
 
-Check `BepInEx/LogOutput.log` if the dropdown is missing. Confirm the loader works, remove duplicate copies of this plugin, and check material JSON formatting. A material can be unavailable for the vehicle's current technology context. Extra protection requires the enabled catalogue, matching material properties and Shell Selector.
+The older one-zone Duplet hull part and its saved identity remain supported. Back up vehicles before updating. Before uninstalling, return custom armour to stock materials and remove custom ERA parts, then save.
 
-Restore your backed-up DLL and matching settings/assets to roll back. Before uninstalling, change vehicles using custom materials back to stock materials and save them. Keep your vehicle backups.
+This is a **vibe-coded beta**, built with AI assistance. Mod source and original generated model/icon assets use the included MIT license. Game and loader binaries are not included. Quality of Life is optional.
 
-Yep, this is **vibe coded**: built with AI assistance. Weight updates and vehicle saving/loading have been tested; this remains a beta. The mod code is MIT licensed. No game or loader binaries are bundled.
+For native dates, custom materials, matching recipe fingerprints and protection conditions, see [Armour setup and customization](ARMOUR-RESPONSES.md).
 
 [Support my ChatGPT budget and help me reverse engineer Sprocket](https://www.paypal.com/donate/?hosted_button_id=7PE3SDBETXFQ6).

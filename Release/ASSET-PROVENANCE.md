@@ -1,0 +1,1 @@
+Original ERA OBJ meshes and icons were generated for this project from visual references and gameplay dimensions. Native Parts/Technology/Localization files are authored mod definitions. No game shader, native assembly, interop binary or third-party FCS model is included. Wolfosito FCS assets are unrelated and absent. MIT license retained from the accepted source.

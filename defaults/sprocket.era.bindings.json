@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "matchMode": "componentId",
+  "bindings": [
+    {
+      "cassetteComponentId": "reliktCassette",
+      "mountComponentId": "reliktMount",
+      "materialId": "reliktCassette",
+      "responseId": "reliktCassette",
+      "kind": "heavyEra"
+    },
+    {
+      "cassetteComponentId": "kontakt1Cassette",
+      "mountComponentId": "kontakt1Mount",
+      "materialId": "kontakt1Cassette",
+      "responseId": "kontakt1Cassette",
+      "kind": "lightEra"
+    },
+    {
+      "cassetteComponentId": "kontakt5Cassette",
+      "mountComponentId": "kontakt5Mount",
+      "materialId": "kontakt5Cassette",
+      "responseId": "kontakt5Cassette",
+      "kind": "heavyEra"
+    },
+    {
+      "cassetteComponentId": "reliktTurretCassette",
+      "mountComponentId": "reliktTurretMount",
+      "materialId": "reliktCassette",
+      "responseId": "reliktCassette",
+      "kind": "heavyEra"
+    },
+    {
+      "cassetteComponentId": "nizhCassette",
+      "mountComponentId": "nizhMount",
+      "materialId": "nizhCassette",
+      "responseId": "nizhCassette",
+      "kind": "heavyEra"
+    },
+    {
+      "cassetteComponentId": "dupletCassette",
+      "mountComponentId": "dupletMount",
+      "materialId": "dupletCassette",
+      "responseId": "dupletCassette",
+      "kind": "heavyEra"
+    },
+    {
+      "cassetteComponentId": "dupletHullCassette",
+      "mountComponentId": "dupletHullMount",
+      "materialId": "dupletCassette",
+      "responseId": "dupletCassette",
+      "kind": "heavyEra"
+    },
+    {
+      "cassetteComponentId": "dupletHullFrontCassette",
+      "mountComponentId": "dupletHullFrontMount",
+      "materialId": "dupletCassette",
+      "responseId": "dupletCassette",
+      "kind": "heavyEra"
+    },
+    {
+      "cassetteComponentId": "dupletHullMiddleCassette",
+      "mountComponentId": "dupletHullMiddleMount",
+      "materialId": "dupletCassette",
+      "responseId": "dupletCassette",
+      "kind": "heavyEra"
+    },
+    {
+      "cassetteComponentId": "dupletHullRearCassette",
+      "mountComponentId": "dupletHullRearMount",
+      "materialId": "dupletCassette",
+      "responseId": "dupletCassette",
+      "kind": "heavyEra"
+    }
+  ]
+}

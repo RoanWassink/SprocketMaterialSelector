@@ -21,7 +21,8 @@ internal static class MaterialAvailability
         return materialInFrame ? MaterialAvailabilityStatus.Available : MaterialAvailabilityStatus.NotInTechnologyFrame;
     }
 
-    internal static string Label(string id, string fallback) => id switch
+    internal static readonly Dictionary<string,string> CustomLabels=new(StringComparer.Ordinal);
+    internal static string Label(string id, string fallback) => CustomLabels.TryGetValue(id,out var custom) ? custom : id switch
     {
         "cwepHeavyEraCassette" => "Heavy ERA cassette (Kontakt-5-inspired; HEAT / APFSDS)",
         "cwepLightEraCassette" => "Light ERA cassette (HEAT; one use per cell)",
@@ -31,3 +32,4 @@ internal static class MaterialAvailability
         _ => fallback
     };
 }
+

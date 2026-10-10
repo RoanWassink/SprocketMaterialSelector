@@ -1,15 +1,13 @@
-# Material Selector 0.4.8
+# Material Selector 0.5.0
 
-Changes since 0.4.5:
+- Placeable Kontakt-1, Kontakt-5, Relikt, Nizh and Duplet ERA, with turret and hull variants.
+- Three independent ERA zones on the large Duplet hull module; existing one-zone vehicles remain supported.
+- ERA follows vehicle paint and camouflage.
+- Edit materials and response settings in-game, then Save to refresh the current vehicle.
+- Safe additive installation preserves custom recipes and settings.
 
-- Material availability now follows Sprocket's native Technology/date rules. Custom Technology dates work without an additional fixed date or era-name restriction.
-- Short tooltips explain each material's HEAT/APFSDS benefits, useful thickness and limitations. Materials without extra reactions show their passive protection/weight tradeoff.
-- Settings now use `sprocket.materialselector.cfg`; existing settings are copied automatically when needed, with the old file retained as a backup. Saved material IDs are unchanged.
+Requires Shell Selector 0.13.0 and Sprocket Json Editor 0.1.0. Protection is gameplay-calibrated; no chain reactions or full tandem-warhead simulation. Vibe-coded beta.
 
-Protection coefficients, mass and pricing are unchanged. Keep your customized Technology files and response catalogue when updating. Extra reactions require matching Shell Selector and an enabled catalogue.
-
-Sprocket 0.2.55.5 / BepInEx 6 IL2CPP. Beta, vibe coded with AI assistance.
+[Support my ChatGPT budget and help me reverse engineer Sprocket to make more mods.](https://www.paypal.com/donate/?hosted_button_id=7PE3SDBETXFQ6)
 
 <!-- sp-compat {"hamish.sprocket": "0.2.55.5", "bepinex.bepinex": "6.0.0-be.788"} -->
-
-[Support development](https://www.paypal.com/donate/?hosted_button_id=7PE3SDBETXFQ6).

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Part>
+  <name>Relikt ERA cassette</name>
+  <description>Placeable heavy reactive armour. One cassette reacts once against eligible HEAT or APFSDS hits, then its cover disappears to show the empty mount. Return to Edit to restore it. Relikt-inspired gameplay model: fixed 500 × 300 × 96 mm and about 53.9 kg. First-version damage proxy retains passive resistance and mass after firing; no tandem-warhead simulation.</description>
+</Part>
