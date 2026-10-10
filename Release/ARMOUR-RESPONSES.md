@@ -16,4 +16,4 @@ Catalogue settings include global HEAT/kinetic loss caps, steel preconditioning,
 
 Open **Edit materials** in the plate editor to change properties, labels, dates and response settings, then **Save** to refresh the current vehicle and matching Shell responses. Back up custom materials before experimenting.
 
-Placeable ERA uses exact independent cassette identities. Each regular module is one spent cell; the large three-zone Duplet hull part has three independent cells. Passive mounts do not activate. Cassettes hide after consumption and return on entering Edit; passive collision and mass remain. The older one-zone hull part keeps its saved GUID. No chain reaction, full tandem-warhead simulation or exact historical protection is claimed.
+Placeable ERA uses exact independent cassette identities. Each regular module is one spent cell; the large three-zone Duplet hull part has three independent cells. Passive mounts do not activate. Cassettes hide after consumption and return on entering Edit; passive collision and mass remain. No chain reaction, full tandem-warhead simulation or exact historical protection is claimed.

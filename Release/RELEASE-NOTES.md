@@ -1,7 +1,7 @@
 # Material Selector 0.5.0
 
 - Placeable Kontakt-1, Kontakt-5, Relikt, Nizh and Duplet ERA, with turret and hull variants.
-- Three independent ERA zones on the large Duplet hull module; existing one-zone vehicles remain supported.
+- Three independent ERA zones on the large Duplet hull module.
 - ERA follows vehicle paint and camouflage.
 - Edit materials and response settings in-game, then Save to refresh the current vehicle.
 - Safe additive installation preserves custom recipes and settings.

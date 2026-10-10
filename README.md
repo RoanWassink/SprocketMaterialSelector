@@ -28,7 +28,7 @@ Select a plate to choose its armour material or open **Edit materials**. Place E
 
 ERA protection depends on the projectile, thickness, angle and enabled matching recipe. Each ordinary module is one spent cell; the three-zone hull variant has three. Spent cassettes hide in combat while mounts remain, and return on entering Edit. Passive collision and mass remain after spending. No chain reaction or full tandem-warhead simulation is provided. Dimensions and protection are gameplay estimates, not exact historical specifications. Premium material pricing uses native part/vehicle costs.
 
-The older one-zone Duplet hull part and its saved identity remain supported. Back up vehicles before updating. Before uninstalling, return custom armour to stock materials and remove custom ERA parts, then save.
+Back up vehicles before updating. Before uninstalling, return custom armour to stock materials and remove custom ERA parts, then save.
 
 This is a **vibe-coded beta**, built with AI assistance. Mod source and original generated model/icon assets use the included MIT license. Game and loader binaries are not included. Quality of Life is optional.
 
